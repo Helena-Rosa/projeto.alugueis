@@ -6,6 +6,21 @@ import sqlite3
 
 class GestorDeAlugueis:
     def __init__(self):
+
+        #arrumar essa parte do banco de dados na proxima aula
+        conexao= sqlite3.connect("05_lista_tarefas/bd_lista_tarefa.sqlite")
+
+        cursor= conexao.cursor()
+
+        #aqui vai o sql do insert
+        sql_insert = ""
+        
+        cursor.execute(sql_insert)
+        
+        conexao.commit()
+        cursor.close()
+        conexao.close()
+    
         
         #configuração da janela principal e da Treeview
         self.janela = ttk.Window(themename="morph")
@@ -55,7 +70,7 @@ class GestorDeAlugueis:
         self.treeview.pack(padx=10, pady=10, fill="both", expand=True)
 
 
-
+        #informações do cabeçalho
         self.treeview["columns"] = ("ITEM", "DESCRIÇÃO", "STATUS" )
         self.treeview["show"] = "headings"
 
@@ -65,7 +80,7 @@ class GestorDeAlugueis:
         self.treeview.heading ("STATUS", text= "STATUS:")
         
 
-
+        #criar colunas
         self.treeview.column("ITEM", width=50)
         self.treeview.column("DESCRIÇÃO", width=50)
         self.treeview.column ("STATUS", width=50)
@@ -76,16 +91,17 @@ class GestorDeAlugueis:
         frame_botao.pack () 
 
 
-        #função botão para LOGAR, comando de verificação para ver se esta certo e a posição que o botão LOGAR esta posicionado
+        #função botão para ADICIONA, comando de verificação para ver se esta certo e a posição que o botão ADICIONAR esta posicionado
         self.botao_teste = ttk.Button(frame_botao,text="ADICIONAR",command=self.adicionar).pack(side="left",pady= 40, padx=20)
 
-        #função botão para SAIR, comando par confirmar se deseja sair mesmo e a posição que o botão SAIR esta posicionado
+        #função botão para CONCLUIR, comando par confirmar se deseja sair mesmo e a posição que o botão CONCLUIR esta posicionado
         ttk.Button(frame_botao,text="CONCLUIR", command=self.concluir).pack(side="right", pady= 40, padx=20  )  
 
-
+         #função botão para EXCLUIR, comando par confirmar se deseja sair mesmo e a posição que o botão EXCLUIR esta posicionado
         ttk.Button(frame_botao, text="EXCLUIR",command=self.excluir).pack(side="right", pady= 40, padx=20  )  
     
     
+    #função para adicionar o item da tabela
     def adicionar(self):
         item= self.campo_item.get()
         descricao= self.campo_descricao.get()
@@ -95,23 +111,26 @@ class GestorDeAlugueis:
         else:
             self.treeview.insert("",tk.END,values=[item,descricao,status])
 
+
+    #função para excluir item da tabela
     def excluir(self):
         escolhida= self.treeview.selection()
     
         selecionado=self.treeview.item(escolhida)
         self.treeview.delete(escolhida)
 
-    
-    def botao_concluir (self):
-        selecionado = self.janela.curselection()
-        self.janela.itemconfig(selecionado[0], {"bg": "green"})
-                            
-         #daqui para baixo é a função para jogar no banco de dados
-        conclusao = selecionado[0] + 1
-        
-                            
-        
 
+
+    #função para concluir algum item da tabela
+    def concluir(self):
+        self.treeview.tag_configure('cor_especial', background='lightblue', foreground='black')
+        self.treeview.tag_configure('outra_cor', background='yellow', foreground='red')
+
+        selecionado=self.treeview.selection()
+
+        self.treeview.item(selecionado,tags='cor_especial')
+
+        
 
 
     def run(self):
