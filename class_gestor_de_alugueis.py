@@ -8,16 +8,28 @@ class GestorDeAlugueis:
     def __init__(self):
 
         #arrumar essa parte do banco de dados na proxima aula
-        conexao= sqlite3.connect("05_lista_tarefas/bd_lista_tarefa.sqlite")
+        conexao= sqlite3.connect("bd_gestor_alugueis.sqlite")
 
         cursor= conexao.cursor()
 
         #aqui vai o sql do insert
-        sql_insert = ""
+        sql_insert = """CREATE TABLE IF NOT EXISTS gestor_alugueis
+                            (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            item VARCHAR(100),
+                            descricao VARCHAR(200),
+                            status VARCHAR(20));"""
         
-        cursor.execute(sql_insert)
+        cursor.execute(sql_insert) 
         
         conexao.commit()
+
+        sql_mostrar_itens="SELECT * FROM gestor_alugueis;"
+
+        cursor.execute(sql_mostrar_itens)
+
+        itens=cursor.fetchall()
+
+
         cursor.close()
         conexao.close()
     
@@ -30,10 +42,10 @@ class GestorDeAlugueis:
        
        
         #texto para escrever as informações de comando (item_nome)
-        item= label_item = ttk.Label (self.janela,
+        label_item = ttk.Label (self.janela,
                                         text= "ITEM:",
                                         font={"success" , 25})
-        item= label_item.pack()
+        label_item.pack()
 
 
 
@@ -44,10 +56,10 @@ class GestorDeAlugueis:
 
 
         #texto para escrever as informações de comando (descrição)
-        descricao= label_senha = ttk.Label (self.janela,
+        label_senha = ttk.Label (self.janela,
                                         text= "DESCRIÇÃO:",
                                         font={"success" , 25})
-        descricao= label_senha.pack()
+        label_senha.pack()
 
 
         #campo de espaço para escrever as infomaçoes pedidas (descrição) 
@@ -56,10 +68,10 @@ class GestorDeAlugueis:
 
     
         #texto para escrever as informações de comando (status)
-        status= label_status = ttk.Label (self.janela,
+        label_status = ttk.Label (self.janela,
                                         text= "STATUS:",
                                         font={"success" , 25})
-        status= label_status.pack()
+        label_status.pack()
 
 
         #campo de espaço para escrever as infomaçoes pedidas (status) 
@@ -71,19 +83,28 @@ class GestorDeAlugueis:
 
 
         #informações do cabeçalho
-        self.treeview["columns"] = ("ITEM", "DESCRIÇÃO", "STATUS" )
+        self.treeview["columns"] = ( "ID", "ITEM", "DESCRIÇÃO", "STATUS" )
         self.treeview["show"] = "headings"
 
         #Configuração dos cabeçalhos da self.treeview
+        self.treeview.heading ("ID", text="CODIGO:")
         self.treeview.heading ("ITEM", text="NOME DO ITEM:")
         self.treeview.heading ("DESCRIÇÃO", text="DESCRIÇÃO:")
         self.treeview.heading ("STATUS", text= "STATUS:")
         
 
         #criar colunas
+        self.treeview.column ("ID", width=50)
         self.treeview.column("ITEM", width=50)
         self.treeview.column("DESCRIÇÃO", width=50)
         self.treeview.column ("STATUS", width=50)
+        
+        
+
+        #atualizar treewie
+        for a in itens:
+            self.treeview.insert("",tk.END,values=a)
+            
 
 
        #função do botão 
@@ -109,7 +130,21 @@ class GestorDeAlugueis:
         if item=="" or descricao=="" or status=="":
             pass
         else:
-            self.treeview.insert("",tk.END,values=[item,descricao,status])
+            conexao= sqlite3.connect("bd_gestor_alugueis.sqlite")
+
+            cursor= conexao.cursor()
+
+            #aqui vai o sql do insert
+            sql_insert = "INSERT INTO gestor_alugueis(item,descricao,status) VALUES(?,?,?)"
+            
+            cursor.execute(sql_insert,[item,descricao,status])
+            
+            conexao.commit()
+            cursor.close()
+            conexao.close()
+
+    
+        
 
 
     #função para excluir item da tabela
@@ -117,7 +152,13 @@ class GestorDeAlugueis:
         escolhida= self.treeview.selection()
     
         selecionado=self.treeview.item(escolhida)
+
+        print(selecionado)
         self.treeview.delete(escolhida)
+
+
+
+
 
 
 
