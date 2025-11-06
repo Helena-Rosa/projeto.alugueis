@@ -1,6 +1,7 @@
 import ttkbootstrap as ttk
 import tkinter as tk
 import sqlite3
+from tkinter import messagebox
 
 
 
@@ -66,17 +67,6 @@ class GestorDeAlugueis:
         self.campo_descricao = ttk.Entry(self.janela, width=50)
         self.campo_descricao.pack(pady=5)
 
-    
-        #texto para escrever as informações de comando (status)
-        label_status = ttk.Label (self.janela,
-                                        text= "STATUS:",
-                                        font={"success" , 25})
-        label_status.pack()
-
-
-        #campo de espaço para escrever as infomaçoes pedidas (status) 
-        self.campo_status = ttk.Entry(self.janela, width=50)
-        self.campo_status.pack(pady=5)
 
         self.treeview = ttk.Treeview(self.janela)
         self.treeview.pack(padx=10, pady=10, fill="both", expand=True)
@@ -112,22 +102,29 @@ class GestorDeAlugueis:
         frame_botao.pack () 
 
 
-        #função botão para ADICIONA, comando de verificação para ver se esta certo e a posição que o botão ADICIONAR esta posicionado
+        #função botão para ADICIONAR
         self.botao_teste = ttk.Button(frame_botao,text="ADICIONAR",command=self.adicionar).pack(side="left",pady= 40, padx=20)
 
-        #função botão para CONCLUIR, comando par confirmar se deseja sair mesmo e a posição que o botão CONCLUIR esta posicionado
-        ttk.Button(frame_botao,text="CONCLUIR", command=self.concluir).pack(side="right", pady= 40, padx=20  )  
-
-         #função botão para EXCLUIR, comando par confirmar se deseja sair mesmo e a posição que o botão EXCLUIR esta posicionado
+         #função botão para EXCLUIR
         ttk.Button(frame_botao, text="EXCLUIR",command=self.excluir).pack(side="right", pady= 40, padx=20  )  
-    
+
+            #função botão para ALTERAR
+        ttk.Button(frame_botao, text= "ALTERAR", command=self.alterar).pack(side="right", pady=40)
+
+        #função botão para ALTERAR
+        ttk.Button(frame_botao, text= "CHECK-IN", command=self.check_in).pack(side="left", pady=40,padx=15)
+
+        #função botão para ALTERAR
+        ttk.Button(frame_botao, text= "CHECK-OUT", command=self.check_out).pack(side="left", pady=40,padx=15)
+
+
     
     #função para adicionar o item da tabela
     def adicionar(self):
         item= self.campo_item.get()
         descricao= self.campo_descricao.get()
-        status= self.campo_status.get()
-        if item=="" or descricao=="" or status=="":
+
+        if item=="" or descricao=="":
             pass
         else:
             conexao= sqlite3.connect("bd_gestor_alugueis.sqlite")
@@ -137,14 +134,83 @@ class GestorDeAlugueis:
             #aqui vai o sql do insert
             sql_insert = "INSERT INTO gestor_alugueis(item,descricao,status) VALUES(?,?,?)"
             
-            cursor.execute(sql_insert,[item,descricao,status])
+            cursor.execute(sql_insert,[item,descricao,"Disponivel"])
             
             conexao.commit()
             cursor.close()
             conexao.close()
 
+            self.atualizar_tabela()
+
+    def check_in(self):
+        escolhida= self.treeview.selection()
     
+        selecionado=self.treeview.item(escolhida)
+
+        codigo= selecionado["values"][0]
+
+        conexao = sqlite3.connect("bd_gestor_alugueis.sqlite")
+
+        cursor = conexao.cursor()
+
+        cursor.execute("""UPDATE gestor_alugueis
+                       SET status=?
+                       where id =?;""",("Alugado",codigo))
+
+        conexao.commit()
+
+        conexao.close()
+
+        self.atualizar_tabela()
+    
+        pass
+
+    def check_out(self):
+        escolhida= self.treeview.selection()
+    
+        selecionado=self.treeview.item(escolhida)
+
+        codigo= selecionado["values"][0]
+
+        conexao = sqlite3.connect("bd_gestor_alugueis.sqlite")
+
+        cursor = conexao.cursor()
+
+        cursor.execute("""UPDATE gestor_alugueis
+                       SET status=?
+                       where id =?;""",("Disponivel",codigo))
+
+        conexao.commit()
+
+        conexao.close()
+
+        self.atualizar_tabela()
+   
+        pass
+
+    def atualizar_tabela(self):
+        conexao= sqlite3.connect("bd_gestor_alugueis.sqlite")
+
+        cursor= conexao.cursor()
+
+        #aqui vai o sql do insert
+        sql_insert = "SELECT * FROM gestor_alugueis;"
         
+        cursor.execute(sql_insert)
+        itens=cursor.fetchall()         
+        
+        conexao.commit()
+
+        for linha in self.treeview.get_children():
+            self.treeview.delete(linha)
+
+        for a in itens:
+            self.treeview.insert("",tk.END,values=a)
+
+
+        cursor.close()
+        conexao.close()
+    
 
 
     #função para excluir item da tabela
@@ -153,25 +219,46 @@ class GestorDeAlugueis:
     
         selecionado=self.treeview.item(escolhida)
 
-        print(selecionado)
-        self.treeview.delete(escolhida)
+        codigo= selecionado["values"][0]
+
+        conexao = sqlite3.connect("bd_gestor_alugueis.sqlite")
+
+        cursor = conexao.cursor()
+
+        cursor.execute("DELETE from gestor_alugueis where ID = ?;", [codigo])
+
+        conexao.commit()
+
+        conexao.close()
+
+        self.atualizar_tabela()
 
 
+    def alterar (self):
 
-
-
-
-
-    #função para concluir algum item da tabela
-    def concluir(self):
-        self.treeview.tag_configure('cor_especial', background='lightblue', foreground='black')
-        self.treeview.tag_configure('outra_cor', background='yellow', foreground='red')
-
-        selecionado=self.treeview.selection()
-
-        self.treeview.item(selecionado,tags='cor_especial')
-
+        item= self.campo_item.get()
+        descricao= self.campo_descricao.get()
         
+        escolhida= self.treeview.selection()
+    
+        selecionado=self.treeview.item(escolhida)
+
+        codigo= selecionado["values"][0]
+
+        conexao = sqlite3.connect("bd_gestor_alugueis.sqlite")
+
+        cursor = conexao.cursor()
+
+        cursor.execute("""UPDATE gestor_alugueis
+                       SET item= ?, descricao=?
+                       where id =?""",(item, descricao, codigo ))
+
+        conexao.commit()
+
+        conexao.close()
+
+        self.atualizar_tabela()
+   
 
 
     def run(self):
